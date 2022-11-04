@@ -11,4 +11,3 @@ describe('Future', () => {
     ;(0, __1.default)(() => {})
   })
 })
-const val = 2
