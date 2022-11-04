@@ -1,5 +1,5 @@
 {
-  "name": "Future",
+  "name": "future",
   "version": "0.0.1",
   "description": "custom promise realisation",
   "main": "index.js",
@@ -10,7 +10,11 @@
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",
     "chai": "^4.3.6",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
     "mocha": "^10.1.0",
+    "prettier": "^2.7.1",
     "typescript": "^4.8.4"
-  }
+  },
+  "test": "mocha"
 }

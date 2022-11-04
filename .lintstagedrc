@@ -1,0 +1,10 @@
+{
+  "**/*.+(js|ts|md)": [
+    "prettier --write",
+    "git add"
+  ],
+  "**/*.+(js|ts)":[
+    "tsc build --noEmit",
+    "git add"
+  ]
+}
