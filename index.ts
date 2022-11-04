@@ -1,1 +1,1 @@
-export default function Future(){}
+export default function Future<T>(resolve: (value: T) => void) {}
