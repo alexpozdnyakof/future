@@ -1,0 +1,16 @@
+{
+  "name": "Future",
+  "version": "0.0.1",
+  "description": "custom promise realisation",
+  "main": "index.js",
+  "repository": "https://github.com/alexpozdnyakof/future.git",
+  "author": "alexpozdnyakof <alexpozdnyakof@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^10.0.0",
+    "chai": "^4.3.6",
+    "mocha": "^10.1.0",
+    "typescript": "^4.8.4"
+  }
+}
