@@ -7,7 +7,7 @@ enum FutureStatus {
 }
 
 interface Future {
-  then: (resolver: Function) => Future
+  then: (onFulfilled?: Function, onRejected?: Function) => Future
 }
 
 /**
@@ -19,8 +19,13 @@ interface Future {
  * @returns
  */
 
+interface Resolver<T> {
+  handleThen: (value: T) => void
+  handleCatch: (reason?: any) => void
+}
+
 export default function Future<T = unknown>(executor: Executor<T>) {
-  let resolvers: Array<Function> = []
+  let resolvers: Array<Resolver<T>> = []
   let result: any
   let status: FutureStatus = FutureStatus.Pending
 
@@ -31,24 +36,36 @@ export default function Future<T = unknown>(executor: Executor<T>) {
     status = aStatus
   }
 
-  const resolve = (value: any) => setState(value, FutureStatus.Resolved)
-  const reject = (reason: any) => setState(reason, FutureStatus.Resolved)
+  const resolve = (aValue: T) => setState(aValue, FutureStatus.Resolved)
+  const reject = (aReason: any) => setState(aReason, FutureStatus.Rejected)
 
-  executor(resolve)
+  executor(resolve, reject)
 
   const executeChain = () => {
-    resolvers.forEach(resolver => resolver(result))
+    resolvers.forEach(({ handleThen, handleCatch }) => {
+      if (status === FutureStatus.Resolved) {
+        handleThen(result)
+      } else {
+        handleCatch(result)
+      }
+    })
     resolvers = []
   }
 
   return {
-    then: (resolver: Function) => {
-      return Future(resolve => {
-        resolvers.push((value: any) => {
-          resolve(resolver(value))
+    then: (onFulfilled?: Function, onRejected?: Function) =>
+      Future(resolve => {
+        resolvers.push({
+          handleThen: (value: any) => {
+            if (!onFulfilled) return
+            resolve(onFulfilled(value))
+          },
+          handleCatch: reason => {
+            if (!onRejected) return
+            resolve(onRejected(reason))
+          },
         })
         executeChain()
-      })
-    },
+      }),
   }
 }
