@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-tsc --build && yarn test && yarn lint-staged
+tsc --noEmit && yarn test && yarn lint-staged
