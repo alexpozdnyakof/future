@@ -7,17 +7,18 @@
   "author": "alexpozdnyakof <alexpozdnyakof@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/chai": "^4.3.3",
-    "@types/mocha": "^10.0.0",
-    "chai": "^4.3.6",
+    "@types/jest": "^29.2.2",
     "husky": "^8.0.1",
+    "jest": "^29.2.2",
     "lint-staged": "^13.0.3",
     "mocha": "^10.1.0",
     "prettier": "^2.7.1",
+    "ts-jest": "^29.0.3",
     "typescript": "^4.8.4"
   },
   "scripts": {
-    "test": "tsc --build && mocha",
-    "lint-staged": "lint-staged"
+    "test": "jest",
+    "lint-staged": "lint-staged",
+    "build": "tsc"
   }
 }
