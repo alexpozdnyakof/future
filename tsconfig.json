@@ -102,7 +102,6 @@
   },
   "include": [
     "./**/*.ts",
-    "./**/*.spec.ts",
   ],
   "exclude": ["node_modules"]
 }
