@@ -1,11 +1,25 @@
-type Executor = (resolve: (value: any) => void) => void
+type Executor<T> = (resolve: (value: T) => void, reject?: (reason?: any) => void) => void
 
 enum FutureStatus {
   Pending,
   Resolved,
+  Rejected,
 }
 
-export default function Future(executor: Executor) {
+interface Future {
+  then: (resolver: Function) => Future
+}
+
+/**
+ * State transition
+ * 1. Pending(default) -> undefined
+ * 2. Resolved -> value
+ * 3. Rejected -> reason
+ * @param executor
+ * @returns
+ */
+
+export default function Future<T = unknown>(executor: Executor<T>) {
   let resolvers: Array<Function> = []
   let result: any
   let status: FutureStatus = FutureStatus.Pending
@@ -16,9 +30,9 @@ export default function Future(executor: Executor) {
     result = aValue
     status = aStatus
   }
-  const resolve = (value: any) => {
-    setState(value, FutureStatus.Resolved)
-  }
+
+  const resolve = (value: any) => setState(value, FutureStatus.Resolved)
+  const reject = (reason: any) => setState(reason, FutureStatus.Resolved)
 
   executor(resolve)
 
@@ -29,8 +43,12 @@ export default function Future(executor: Executor) {
 
   return {
     then: (resolver: Function) => {
-      resolvers.push(resolver)
-      executeChain()
+      return Future(resolve => {
+        resolvers.push((value: any) => {
+          resolve(resolver(value))
+        })
+        executeChain()
+      })
     },
   }
 }
