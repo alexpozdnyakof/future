@@ -80,7 +80,7 @@ describe('Future', () => {
   it('should not change state after fulfilled', done => {
     FutureFactory((resolve, reject) => (resolve('resolved'), reject('rejected')))
       .catch(() => {
-        done.fail(new Error('Should not be called'))
+        done.fail(new Error('should not be called'))
       })
       .then(value => (expect(value).toBe('resolved'), done()))
   })
@@ -88,7 +88,7 @@ describe('Future', () => {
   it('should not change state after rejected', done => {
     FutureFactory((resolve, reject) => (reject('rejected'), resolve('resolved')))
       .then(() => {
-        done.fail('should not call')
+        done.fail('should not be called')
       })
       .catch(error => {
         expect(error).toBe('rejected')
@@ -113,10 +113,14 @@ describe('Future', () => {
     const onRejected = jest.fn()
     FutureFactory((_, reject) => reject('peanut butter'))
       .then(onFulfilled, onRejected)
-      .then(() => {
-        expect(onFulfilled).not.toHaveBeenCalled()
-        expect(onRejected).toHaveBeenCalledTimes(1)
-        done()
-      })
+      .then(() => (expect(onFulfilled).not.toHaveBeenCalled(), expect(onRejected).toHaveBeenCalledTimes(1), done()))
+  })
+
+  it('should chaining computation', done => {
+    FutureFactory(resolve => resolve(0))
+      .then(x => x + 1)
+      .then(x => x + 1)
+      .then(x => x + 1)
+      .then(x => (expect(x).toBe(3), done()))
   })
 })
