@@ -134,4 +134,30 @@ describe('Future', () => {
       .catch()
       .catch(error => (expect(error).toBe(panic), done()))
   })
+
+  it('should call finally callback whe future is resolved', done => {
+    Future(resolve => resolve('success')).finally(() => done())
+  })
+
+  it('should call finally callback whe future is rejected', done => {
+    Future((_, reject) => reject('failed')).finally(() => done())
+  })
+
+  it('should run finally one time when resolved', done => {
+    const onFinally = jest.fn()
+
+    Future(resolve => resolve('peanut butter'))
+      .finally(() => onFinally())
+      .then(value => (expect(value).toBe('peanut butter'), expect(onFinally).toHaveBeenCalledTimes(1), done()))
+  })
+
+  it('should run finally one time when rejected', done => {
+    const onFinally = jest.fn()
+
+    Future((_, reject) => reject('Panic!'))
+      .finally(() => {
+        onFinally()
+      })
+      .catch(reason => (expect(reason).toBe('Panic!'), expect(onFinally).toHaveBeenCalledTimes(1), done()))
+  })
 })

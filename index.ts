@@ -12,6 +12,7 @@ interface Future<T = any> {
     onRejected?: null | ((reason: any) => R2 | Future<R2>)
   ) => Future<R1 | R2> | null | undefined
   catch: <R = never>(onRejected: null | ((reason: any) => R | Future<R>)) => Future<R>
+  finally: (onFinally: () => void) => Future<T>
 }
 
 interface Resolver<T> {
@@ -55,7 +56,7 @@ export default function Future<T = any>(executor: Executor<T>) {
 
       result = aValue
       status = aStatus
-      executeChain()
+      computeResult()
     })
   }
 
@@ -113,8 +114,14 @@ export default function Future<T = any>(executor: Executor<T>) {
 
   return {
     then,
-    catch: <R = never>(onRejected?: (reason: any) => R | Future<R>) => {
-      return then(undefined, onRejected)
-    },
+    catch: <R = never>(onRejected?: (reason: any) => R | Future<R>) => then(undefined, onRejected),
+    finally: (onFinally: () => void) =>
+      then(
+        value => (onFinally(), value),
+        reason => {
+          onFinally()
+          throw reason
+        }
+      ),
   }
 }
