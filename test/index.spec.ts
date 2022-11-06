@@ -1,4 +1,3 @@
-import Future from '../index'
 import FutureFactory from '../index'
 
 describe('Future', () => {
@@ -29,7 +28,75 @@ describe('Future', () => {
       })
   })
 
-  it('should be idempotent for resolved state', done => {
+  it('should be execute asynchronous', done => {
+    let value = 0
+    FutureFactory(resolve => ((value = 1), resolve(value)))
+    expect(value).toBe(0)
+    done()
+  })
+
+  it('should resolve inner future in first way', done => {
+    FutureFactory(resolve => resolve(FutureFactory(resolve => resolve('peanut butter')))).then(value => {
+      expect(value).toBe('peanut butter')
+      done()
+    })
+  })
+  it('should auto-reject resolved error', () => {
+    const resolve = jest.fn()
+    const reject = jest.fn()
+    FutureFactory(resolve => resolve(new Error('resolve error')))
+      .then(resolve, reject)
+      .then(() => {
+        expect(resolve).not.toHaveBeenCalled()
+        expect(reject).toHaveBeenCalled()
+      })
+  })
+
+  it('should resolve inner future before catch', done => {
+    FutureFactory(resolve => resolve(FutureFactory((_, reject) => reject('rejected')))).catch(reason => {
+      expect(reason).toBe('rejected')
+      done()
+    })
+  })
+
+  it('should catch error from reject', done => {
+    const rejectError = new Error('rejected')
+    FutureFactory((_, reject) => reject(rejectError)).catch((anError: Error) => {
+      expect(anError).toBe(rejectError)
+      done()
+    })
+  })
+
+  it('should catch error from throw', done => {
+    const rejectError = new Error('rejected')
+    FutureFactory(() => {
+      throw rejectError
+    }).catch((anError: Error) => {
+      expect(anError).toBe(rejectError)
+      done()
+    })
+  })
+
+  it('should not change state after fulfilled', done => {
+    FutureFactory((resolve, reject) => (resolve('resolved'), reject('rejected')))
+      .catch(() => {
+        done.fail(new Error('Should not be called'))
+      })
+      .then(value => (expect(value).toBe('resolved'), done()))
+  })
+
+  it('should not change state after rejected', done => {
+    FutureFactory((resolve, reject) => (reject('rejected'), resolve('resolved')))
+      .then(() => {
+        done.fail('should not call')
+      })
+      .catch(error => {
+        expect(error).toBe('rejected')
+        done()
+      })
+  })
+
+  it('should not run onRejected when resolved', done => {
     const onFulfilled = jest.fn()
     const onRejected = jest.fn()
     FutureFactory(resolve => resolve('peanut butter'))
@@ -41,7 +108,7 @@ describe('Future', () => {
       })
   })
 
-  it('should be idempotent for rejected state', done => {
+  it('should not run onResolved when rejected', done => {
     const onFulfilled = jest.fn()
     const onRejected = jest.fn()
     FutureFactory((_, reject) => reject('peanut butter'))
@@ -51,54 +118,5 @@ describe('Future', () => {
         expect(onRejected).toHaveBeenCalledTimes(1)
         done()
       })
-  })
-
-  it('should be execute asynchronous', done => {
-    let value = 0
-    FutureFactory(resolve => ((value = 1), resolve(value)))
-    expect(value).toBe(0)
-    done()
-  })
-
-  it('should resolve inner future in first way', done => {
-    Future(resolve => resolve(Future(resolve => resolve('peanut butter')))).then(value => {
-      expect(value).toBe('peanut butter')
-      done()
-    })
-  })
-  it('should auto-reject resolved error', () => {
-    const resolve = jest.fn()
-    const reject = jest.fn()
-    Future(resolve => resolve(new Error('resolve error')))
-      .then(resolve, reject)
-      .then(() => {
-        expect(resolve).not.toHaveBeenCalled()
-        expect(reject).toHaveBeenCalled()
-      })
-  })
-
-  it('should resolve inner future before catch', done => {
-    Future(resolve => resolve(Future((_, reject) => reject('rejected')))).catch(reason => {
-      expect(reason).toBe('rejected')
-      done()
-    })
-  })
-
-  it('should catch error from reject', done => {
-    const rejectError = new Error('rejected')
-    Future((_, reject) => reject(rejectError)).catch((anError: Error) => {
-      expect(anError).toBe(rejectError)
-      done()
-    })
-  })
-
-  it('should catch error from throw', done => {
-    const rejectError = new Error('rejected')
-    Future(() => {
-      throw rejectError
-    }).catch((anError: Error) => {
-      expect(anError).toBe(rejectError)
-      done()
-    })
   })
 })

@@ -38,19 +38,25 @@ export default function Future<T = any>(executor: Executor<T>) {
   let result: any
   let status: FutureStatus = FutureStatus.Pending
 
-  const resolve = (aValue: T | Future<T>) => async(() => setState(aValue, FutureStatus.Resolved))
-  const reject = (aReason: any) => async(() => setState(aReason, FutureStatus.Rejected))
+  const resolve = (aValue: T | Future<T>) => {
+    setState(aValue, FutureStatus.Resolved)
+  }
+  const reject = (aReason: any) => {
+    setState(aReason, FutureStatus.Rejected)
+  }
 
   const setState = (aValue: any, aStatus: FutureStatus) => {
-    if (status !== FutureStatus.Pending) return
-    if (thenable(aValue)) {
-      aValue.then(resolve, reject)
-      return
-    }
+    async(() => {
+      if (status !== FutureStatus.Pending) return
+      if (thenable(aValue)) {
+        aValue.then(resolve, reject)
+        return
+      }
 
-    result = aValue
-    status = aStatus
-    executeChain()
+      result = aValue
+      status = aStatus
+      executeChain()
+    })
   }
 
   async(() => {
@@ -63,7 +69,6 @@ export default function Future<T = any>(executor: Executor<T>) {
 
   const executeChain = () => {
     if (status === FutureStatus.Pending) return
-
     resolvers.forEach(({ handleThen, handleCatch }) => {
       if (status === FutureStatus.Resolved) {
         handleThen(result)
@@ -71,44 +76,46 @@ export default function Future<T = any>(executor: Executor<T>) {
         handleCatch(result)
       }
     })
-
     resolvers = []
   }
 
-  const future = {
-    then: <R1 = T, R2 = never>(
-      onFulfilled?: null | ((value: T) => R1 | Future<R1>),
-      onRejected?: null | ((reason: any) => R2 | Future<R2>)
-    ) =>
-      Future(resolve => {
-        resolvers.push({
-          handleThen: (value: any) => {
-            if (!onFulfilled) {
-              resolve(value)
-            } else {
-              try {
-                resolve(onFulfilled(value) as R1 | Future<R1>)
-              } catch (e) {
-                reject(e)
-              }
+  function then<R1 = T, R2 = never>(
+    onFulfilled?: null | ((value: T) => R1 | Future<R1>),
+    onRejected?: null | ((reason: any) => R2 | Future<R2>)
+  ) {
+    return Future((resolve, reject) => {
+      resolvers.push({
+        handleThen: value => {
+          if (!onFulfilled) {
+            resolve(value as any)
+          } else {
+            try {
+              resolve(onFulfilled(value) as R1 | Future<R1>)
+            } catch (e) {
+              reject(e)
             }
-          },
-          handleCatch: reason => {
-            if (!onRejected) {
-              reject(reason)
-            } else {
-              try {
-                resolve(onRejected(reason) as R2 | Future<R1 | R2>)
-              } catch (e) {
-                reject(e)
-              }
+          }
+        },
+        handleCatch: reason => {
+          if (!onRejected) {
+            reject(reason)
+          } else {
+            try {
+              resolve(onRejected(reason) as R2 | Future<R1 | R2>)
+            } catch (e) {
+              reject(e)
             }
-          },
-        })
-        executeChain()
-      }),
-    catch: <R = never>(onRejected?: (reason: any) => R | Future<R>) => future.then(undefined, onRejected),
+          }
+        },
+      })
+      executeChain()
+    })
   }
 
-  return future
+  return {
+    then,
+    catch: <R = never>(onRejected?: (reason: any) => R | Future<R>) => {
+      return then(undefined, onRejected)
+    },
+  }
 }
