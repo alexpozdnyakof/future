@@ -1,4 +1,4 @@
-type Executor<T> = (resolve: (value: T) => void, reject?: (reason?: any) => void) => void
+type Executor<T> = (resolve: (value: T) => void, reject: (reason?: any) => void) => void
 
 enum FutureStatus {
   Pending,
@@ -53,7 +53,7 @@ export default function Future<T = unknown>(executor: Executor<T>) {
   }
 
   return {
-    then: (onFulfilled?: Function, onRejected?: Function) =>
+    then: <R1 = T, R2 = never>(onFulfilled?: null | ((value: T) => R1), onRejected?: null | ((reason: any) => R2)) =>
       Future(resolve => {
         resolvers.push({
           handleThen: (value: any) => {
