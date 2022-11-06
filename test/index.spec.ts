@@ -66,4 +66,39 @@ describe('Future', () => {
       done()
     })
   })
+  it('should auto-reject resolved error', () => {
+    const resolve = jest.fn()
+    const reject = jest.fn()
+    Future(resolve => resolve(new Error('resolve error')))
+      .then(resolve, reject)
+      .then(() => {
+        expect(resolve).not.toHaveBeenCalled()
+        expect(reject).toHaveBeenCalled()
+      })
+  })
+
+  it('should resolve inner future before catch', done => {
+    Future(resolve => resolve(Future((_, reject) => reject('rejected')))).catch(reason => {
+      expect(reason).toBe('rejected')
+      done()
+    })
+  })
+
+  it('should catch error from reject', done => {
+    const rejectError = new Error('rejected')
+    Future((_, reject) => reject(rejectError)).catch((anError: Error) => {
+      expect(anError).toBe(rejectError)
+      done()
+    })
+  })
+
+  it('should catch error from throw', done => {
+    const rejectError = new Error('rejected')
+    Future(() => {
+      throw rejectError
+    }).catch((anError: Error) => {
+      expect(anError).toBe(rejectError)
+      done()
+    })
+  })
 })
