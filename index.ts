@@ -79,11 +79,11 @@ export default function Future<T = any>(executor: Executor<T>) {
     resolvers = []
   }
 
-  function then<R1 = T, R2 = never>(
+  const then = <R1 = T, R2 = never>(
     onFulfilled?: null | ((value: T) => R1 | Future<R1>),
     onRejected?: null | ((reason: any) => R2 | Future<R2>)
-  ) {
-    return Future((resolve, reject) => {
+  ) =>
+    Future((resolve, reject) => {
       resolvers.push({
         handleThen: value => {
           if (!onFulfilled) {
@@ -110,7 +110,6 @@ export default function Future<T = any>(executor: Executor<T>) {
       })
       executeChain()
     })
-  }
 
   return {
     then,
