@@ -38,10 +38,10 @@ export default function Future<T = any>(executor: Executor<T>) {
   let result: any
   let status: FutureStatus = FutureStatus.Pending
 
-  const resolve = (aValue: T | Future<T>) => {
+  const thisResolve = (aValue: T | Future<T>) => {
     setState(aValue, FutureStatus.Resolved)
   }
-  const reject = (aReason: any) => {
+  const thisReject = (aReason: any) => {
     setState(aReason, FutureStatus.Rejected)
   }
 
@@ -49,7 +49,7 @@ export default function Future<T = any>(executor: Executor<T>) {
     async(() => {
       if (status !== FutureStatus.Pending) return
       if (thenable(aValue)) {
-        aValue.then(resolve, reject)
+        aValue.then(thisResolve, thisReject)
         return
       }
 
@@ -61,9 +61,9 @@ export default function Future<T = any>(executor: Executor<T>) {
 
   async(() => {
     try {
-      executor(resolve, reject)
+      executor(thisResolve, thisReject)
     } catch (e) {
-      reject(e)
+      thisReject(e)
     }
   })
 
