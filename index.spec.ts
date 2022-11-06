@@ -1,5 +1,4 @@
-import Future from '../index'
-import FutureFactory from '../index'
+import FutureFactory from './index'
 
 describe('Future', () => {
   it('should return resolved value', done => {
@@ -104,7 +103,7 @@ describe('Future', () => {
   it('should catch errors in then', done => {
     const panic = new Error('Panic!')
 
-    Future((_, reject) => reject(new Error('Not Panic!')))
+    FutureFactory((_, reject) => reject(new Error('Not Panic!')))
       .then(() => {
         throw panic
       })
@@ -114,7 +113,7 @@ describe('Future', () => {
   it('should catch errors in catch', done => {
     const panic = new Error('Panic!')
 
-    Future((_, reject) => reject(new Error('Not Panic!')))
+    FutureFactory((_, reject) => reject(new Error('Not Panic!')))
       .catch(() => {
         throw panic
       })
@@ -122,7 +121,7 @@ describe('Future', () => {
   })
 
   it('should pass value through empty then', done => {
-    Future(resolve => resolve('pancake!'))
+    FutureFactory(resolve => resolve('pancake!'))
       .then()
       .then(value => (expect(value).toBe('pancake!'), done()))
   })
@@ -130,23 +129,23 @@ describe('Future', () => {
   it('should pass error through empty catch', done => {
     const panic = new Error('Panic!')
 
-    Future((_, reject) => reject(panic))
+    FutureFactory((_, reject) => reject(panic))
       .catch()
       .catch(error => (expect(error).toBe(panic), done()))
   })
 
   it('should call finally callback whe future is resolved', done => {
-    Future(resolve => resolve('success')).finally(() => done())
+    FutureFactory(resolve => resolve('success')).finally(() => done())
   })
 
   it('should call finally callback whe future is rejected', done => {
-    Future((_, reject) => reject('failed')).finally(() => done())
+    FutureFactory((_, reject) => reject('failed')).finally(() => done())
   })
 
   it('should run finally one time when resolved', done => {
     const onFinally = jest.fn()
 
-    Future(resolve => resolve('peanut butter'))
+    FutureFactory(resolve => resolve('peanut butter'))
       .finally(() => onFinally())
       .then(value => (expect(value).toBe('peanut butter'), expect(onFinally).toHaveBeenCalledTimes(1), done()))
   })
@@ -154,7 +153,7 @@ describe('Future', () => {
   it('should run finally one time when rejected', done => {
     const onFinally = jest.fn()
 
-    Future((_, reject) => reject('Panic!'))
+    FutureFactory((_, reject) => reject('Panic!'))
       .finally(() => {
         onFinally()
       })
