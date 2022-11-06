@@ -6,9 +6,19 @@ enum FutureStatus {
   Rejected,
 }
 
-interface Future {
+interface Future<T = unknown> {
   then: (onFulfilled?: Function, onRejected?: Function) => Future
 }
+
+interface Resolver<T> {
+  handleThen: (value: T) => void
+  handleCatch: (reason?: any) => void
+}
+
+const async = (fn: () => void) => {
+  setTimeout(fn, 0)
+}
+const thenable = (x: { then?: Function }): x is Future => typeof x?.then === 'function'
 
 /**
  * State transition
@@ -18,12 +28,6 @@ interface Future {
  * @param executor
  * @returns
  */
-
-interface Resolver<T> {
-  handleThen: (value: T) => void
-  handleCatch: (reason?: any) => void
-}
-
 export default function Future<T = unknown>(executor: Executor<T>) {
   let resolvers: Array<Resolver<T>> = []
   let result: any
@@ -34,14 +38,17 @@ export default function Future<T = unknown>(executor: Executor<T>) {
 
     result = aValue
     status = aStatus
+    executeChain()
   }
 
-  const resolve = (aValue: T) => setState(aValue, FutureStatus.Resolved)
-  const reject = (aReason: any) => setState(aReason, FutureStatus.Rejected)
+  const resolve = (aValue: T) => async(() => setState(aValue, FutureStatus.Resolved))
+  const reject = (aReason: any) => async(() => setState(aReason, FutureStatus.Rejected))
 
-  executor(resolve, reject)
+  async(() => executor(resolve, reject))
 
   const executeChain = () => {
+    if (status === FutureStatus.Pending) return
+
     resolvers.forEach(({ handleThen, handleCatch }) => {
       if (status === FutureStatus.Resolved) {
         handleThen(result)

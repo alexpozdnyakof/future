@@ -1,8 +1,11 @@
 import FutureFactory from '../index'
 
 describe('Future', () => {
-  it('should return resolved value', async () => {
-    await expect(FutureFactory(resolve => resolve('peanut butter'))).resolves.toBe('peanut butter')
+  it('should return resolved value', done => {
+    FutureFactory(resolve => resolve('peanut butter')).then(v => {
+      expect(v).toBe('peanut butter')
+      done()
+    })
   })
 
   it('should run thenable callback once', done => {
@@ -47,5 +50,12 @@ describe('Future', () => {
         expect(onRejected).toHaveBeenCalledTimes(1)
         done()
       })
+  })
+
+  it('should be executre acyncronous', done => {
+    let value = 0
+    FutureFactory(resolve => ((value = 1), resolve(value)))
+    expect(value).toBe(0)
+    done()
   })
 })
