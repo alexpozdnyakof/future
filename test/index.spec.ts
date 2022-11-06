@@ -1,3 +1,4 @@
+import Future from '../index'
 import FutureFactory from '../index'
 
 describe('Future', () => {
@@ -90,5 +91,47 @@ describe('Future', () => {
       .then(x => x + 1)
       .then(x => x + 1)
       .then(x => (expect(x).toBe(3), done()))
+  })
+
+  it('should chain then after catch', done => {
+    FutureFactory(() => {
+      throw new Error('Panic!')
+    })
+      .catch(() => 'pick six')
+      .then(value => (expect(value).toBe('pick six'), done()))
+  })
+
+  it('should catch errors in then', done => {
+    const panic = new Error('Panic!')
+
+    Future((_, reject) => reject(new Error('Not Panic!')))
+      .then(() => {
+        throw panic
+      })
+      .catch(e => (expect(e).toBe(e), done()))
+  })
+
+  it('should catch errors in catch', done => {
+    const panic = new Error('Panic!')
+
+    Future((_, reject) => reject(new Error('Not Panic!')))
+      .catch(() => {
+        throw panic
+      })
+      .catch(e => (expect(e).toBe(e), done()))
+  })
+
+  it('should pass value through empty then', done => {
+    Future(resolve => resolve('pancake!'))
+      .then()
+      .then(value => (expect(value).toBe('pancake!'), done()))
+  })
+
+  it('should pass error through empty catch', done => {
+    const panic = new Error('Panic!')
+
+    Future((_, reject) => reject(panic))
+      .catch()
+      .catch(error => (expect(error).toBe(panic), done()))
   })
 })

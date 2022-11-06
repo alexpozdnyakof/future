@@ -67,7 +67,7 @@ export default function Future<T = any>(executor: Executor<T>) {
     }
   })
 
-  const executeChain = () => {
+  const computeResult = () => {
     if (status === FutureStatus.Pending) return
     resolvers.forEach(({ handleThen, handleCatch }) => {
       if (status === FutureStatus.Resolved) {
@@ -108,7 +108,7 @@ export default function Future<T = any>(executor: Executor<T>) {
           }
         },
       })
-      executeChain()
+      computeResult()
     })
 
   return {
