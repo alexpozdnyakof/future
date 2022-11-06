@@ -1,3 +1,4 @@
+import Future from '../index'
 import FutureFactory from '../index'
 
 describe('Future', () => {
@@ -52,10 +53,17 @@ describe('Future', () => {
       })
   })
 
-  it('should be executre acyncronous', done => {
+  it('should be execute asynchronous', done => {
     let value = 0
     FutureFactory(resolve => ((value = 1), resolve(value)))
     expect(value).toBe(0)
     done()
+  })
+
+  it('should resolve inner future in first way', done => {
+    Future(resolve => resolve(Future(resolve => resolve('peanut butter')))).then(value => {
+      expect(value).toBe('peanut butter')
+      done()
+    })
   })
 })
