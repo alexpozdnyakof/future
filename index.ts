@@ -21,7 +21,7 @@ interface Resolver<T> {
 }
 
 const async = (fn: () => void) => {
-  setTimeout(fn, 0)
+  process.nextTick(fn, 0)
 }
 
 const thenable = (x: { then?: Function }): x is Future => typeof x?.then === 'function'

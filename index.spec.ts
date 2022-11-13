@@ -159,4 +159,27 @@ describe('Future', () => {
       })
       .catch(reason => (expect(reason).toBe('Panic!'), expect(onFinally).toHaveBeenCalledTimes(1), done()))
   })
+
+  it('should execute future main fn at microtask step', done => {
+    const breakpointCalls: Array<string> = []
+    const setBreakpoint = (name: string) => {
+      breakpointCalls.push(name)
+    }
+
+    function cycleStep() {
+      setBreakpoint('sync') // sync code
+
+      setTimeout(() => {
+        setBreakpoint('zero timeout')
+        expect(breakpointCalls).toEqual(['sync', 'sync', 'future', 'zero timeout'])
+        done()
+      }, 0) // async code
+
+      FutureFactory(resolve => resolve(setBreakpoint('future'))) // async code
+
+      setBreakpoint('sync') // sync code
+    }
+
+    cycleStep()
+  })
 })
